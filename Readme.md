@@ -1,7 +1,7 @@
 # A docker image for building the flutter releases in runners
 
-[flutter-aio](https://github.com/chirag-ji/flutter-aio) repository contains the container which can be used in runners
-for building the releases in fewer efforts.
+[flutter-aio](https://github.com/chirag-ji/flutter-aio) repository image contains the images which can be used in
+runners for building the releases in fewer efforts.
 
 #### This repository includes:
 
@@ -25,6 +25,9 @@ for building the releases in fewer efforts.
 ------------------------------
 
 Only **stable** branch is being built from [flutter](https://github.com/flutter/flutter) repository.
+
+**Note: [flutter-aio](https://github.com/chirag-ji/flutter-aio)  tags works on the basis
+of [flutter](https://github.com/flutter/flutter) stable version**
 
 ------------------------------
 
