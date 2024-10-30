@@ -24,7 +24,7 @@ jobs:
             | jq -r '.releases[] | select(.channel=="stable") | .version' | head -n 1)
           
           echo "Latest Flutter version is $latest_version"
-          echo "::set-output name=flutter_version::$latest_version"
+          echo "flutter_version=$latest_version" >> $GITHUB_OUTPUT
 
   check-docker-tags:
     name: Check Docker Image Tags
@@ -40,17 +40,17 @@ jobs:
         run: |
           tags=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKER_REPO/tags?page_size=100" | jq -r '.results[].name')
           echo "Docker tags: $tags"
-          echo "::set-output name=tags::$tags"
+          echo "tags=$tags" >> $GITHUB_OUTPUT
 
       - name: Check if Flutter version exists in Docker tags
         id: check-existence
         run: |
           if echo "${{ steps.get-tags.outputs.tags }}" | grep -q "${{ needs.get-flutter-version.outputs.flutter_version }}"; then
             echo "Flutter version ${{ needs.get-flutter-version.outputs.flutter_version }} already exists as a Docker tag."
-            echo "::set-output name=version_exists::true"
+            echo "version_exists=true" >> $GITHUB_OUTPUT
           else
             echo "Flutter version ${{ needs.get-flutter-version.outputs.flutter_version }} does not exist as a Docker tag."
-            echo "::set-output name=version_exists::false"
+            echo "version_exists=false" >> $GITHUB_OUTPUT
 
   build-stable:
     runs-on: ubuntu-latest
