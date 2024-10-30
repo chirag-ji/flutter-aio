@@ -12,6 +12,10 @@
 - Android releases
 - Web Builds
 
+#### Usages:
+- GitLab Runners
+- GitHub Actions
+- Gitea Actions
 
 ## Tags
 
