@@ -5,9 +5,57 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
+env:
+  DOCKER_REPO: "chiragji/flutter-aio"
+
 jobs:
+  get-flutter-version:
+    name: Get Latest Flutter Version
+    runs-on: ubuntu-latest
+
+    outputs:
+      flutter_version: ${{ steps.get-version.outputs.flutter_version }}
+
+    steps:
+      - name: Get the latest Flutter version
+        id: get-version
+        run: |
+          latest_version=$(curl -s https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json \
+            | jq -r '.releases[] | select(.channel=="stable") | .version' | head -n 1)
+          
+          echo "Latest Flutter version is $latest_version"
+          echo "::set-output name=flutter_version::$latest_version"
+
+  check-docker-tags:
+    name: Check Docker Image Tags
+    runs-on: ubuntu-latest
+    needs: get-flutter-version
+
+    outputs:
+      version_exists: ${{ steps.check-existence.outputs.version_exists }}
+
+    steps:
+      - name: Fetch existing Docker image tags
+        id: get-tags
+        run: |
+          tags=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKER_REPO/tags?page_size=100" | jq -r '.results[].name')
+          echo "Docker tags: $tags"
+          echo "::set-output name=tags::$tags"
+
+      - name: Check if Flutter version exists in Docker tags
+        id: check-existence
+        run: |
+          if echo "${{ steps.get-tags.outputs.tags }}" | grep -q "${{ needs.get-flutter-version.outputs.flutter_version }}"; then
+            echo "Flutter version ${{ needs.get-flutter-version.outputs.flutter_version }} already exists as a Docker tag."
+            echo "::set-output name=version_exists::true"
+          else
+            echo "Flutter version ${{ needs.get-flutter-version.outputs.flutter_version }} does not exist as a Docker tag."
+            echo "::set-output name=version_exists::false"
+
   build-stable:
     runs-on: ubuntu-latest
+    needs: check-docker-tags
+    if: needs.check-docker-tags.outputs.version_exists == 'false'
     steps:
       - uses: actions/checkout@v4
       - name: setup buildx
@@ -22,7 +70,7 @@ jobs:
       - name: Build and push image
         run: |
           docker build \
-            -t chiragji/flutter-aio:latest \
+            -t $DOCKER_REPO:latest -t $DOCKER_REPO:$FLUTTER_VERSION \
             --push \
             --platform linux/amd64 \
             .
