@@ -33,6 +33,7 @@ jobs:
 
     outputs:
       version_exists: ${{ steps.check-existence.outputs.version_exists }}
+      build_tag: ${{ steps.check-existence.outputs.build_tag }}
 
     steps:
       - name: Fetch existing Docker image tags
@@ -51,6 +52,9 @@ jobs:
           else
             echo "Flutter version ${{ needs.get-flutter-version.outputs.flutter_version }} does not exist as a Docker tag."
             echo "version_exists=false" >> $GITHUB_OUTPUT
+            echo "build_tag=${{ needs.get-flutter-version.outputs.flutter_version }}" >> $GITHUB_OUTPUT
+            echo "will build tag ${{ needs.get-flutter-version.outputs.flutter_version }}"
+          fi
 
   build-stable:
     runs-on: ubuntu-latest
@@ -69,8 +73,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push image
         run: |
+          echo "Starting building tags latest, ${{ needs.check-docker-tags.outputs.build_tag }}"
           docker build \
-            -t $DOCKER_REPO:latest -t $DOCKER_REPO:$FLUTTER_VERSION \
+            -t "$DOCKER_REPO":latest -t "$DOCKER_REPO:${{ needs.check-docker-tags.outputs.build_tag }}" \
             --push \
             --platform linux/amd64 \
             .
