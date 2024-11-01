@@ -39,7 +39,7 @@ jobs:
       - name: Fetch existing Docker image tags
         id: get-tags
         run: |
-          tags=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKER_REPO/tags?page_size=100" | jq -r '.results[].name')
+          tags=$(curl -s "https://registry.hub.docker.com/v2/repositories/$DOCKER_REPO/tags?page_size=100" | jq -r '.results[].name' | paste -sd "," -)
           echo "Docker tags: $tags"
           echo "tags=$tags" >> $GITHUB_OUTPUT
 
